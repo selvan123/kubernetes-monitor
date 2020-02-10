@@ -41,10 +41,11 @@ const openshift4Setup: IPlatformSetup = {
   delete: os4.deleteCluster,
   config: os4.exportKubeConfig,
   clean: os4.clean,
+  setupTester: os4.setupTester,
 };
 
 export default {
   kind: kindSetup,
   eks: eksSetup,
-  openshift4: openshift4Setup,
+  os4: openshift4Setup,
 };

@@ -53,6 +53,10 @@ function createTestYamlDeployment(
     value: 'https://kubernetes-upstream.dev.snyk.io',
   };
 
+  // TODO REMOVE THIS
+  delete deployment.spec.template.spec.containers[0].securityContext.runAsUser;
+  delete deployment.spec.template.spec.containers[0].securityContext.runAsGroup;
+
   writeFileSync(newYamlPath, stringify(deployment));
   console.log('Created test deployment');
 }
@@ -127,6 +131,7 @@ export async function deployMonitor(): Promise<string> {
     const imageNameAndTag = getEnvVariableOrDefault(
       'KUBERNETES_MONITOR_IMAGE_NAME_AND_TAG',
       // the default, determined by ./script/build-image.sh
+      // 'snyk/kubernetes-monitor:1.20.0', // TODO REverT TSHIHREW
       'snyk/kubernetes-monitor:local',
     );
 

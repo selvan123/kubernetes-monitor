@@ -26,6 +26,21 @@ main_branches_filter: &main_branches_filter
 
 jobs:
 ######################## PR OR MERGE TO STAGING ########################
+  create_cluster:
+    <<: *default_machine_config
+    steps:
+      - checkout
+      - run:
+          name: Create cluster
+          command: |
+            ./scripts/create-cluster.sh
+      - run:
+          name: Notify Slack on failure
+          command: |
+            false &&
+            ./scripts/slack-notify-failure.sh "ivan-is-testing-sorry-for-the-noise"
+          when: on_fail
+
   package_manager_test_apk:
     <<: *default_machine_config
     steps:
@@ -96,6 +111,58 @@ jobs:
           command: |
             if [[ "$CIRCLE_BRANCH" == "staging" ]]; then
               ./scripts/slack-notify-failure.sh "staging-rpm-tests-${CIRCLE_SHA1}"
+            else
+              echo "Current branch is $CIRCLE_BRANCH so skipping notifying Slack"
+            fi
+          when: on_fail
+
+  build_operator:
+    <<: *default_machine_config
+    steps:
+      - checkout
+      - run:
+          name: BUILD OPERATOR
+          command: |
+            export IMAGE_TAG=$([[ "$CIRCLE_BRANCH" == "staging" ]] && echo "staging-candidate" || echo "discardable") &&
+            IMAGE_NAME_CANDIDATE=snyk/kubernetes-monitor:${IMAGE_TAG}-${CIRCLE_SHA1} &&
+            ./scripts/build-operator.sh ${IMAGE_NAME_CANDIDATE} &&
+            docker push ${IMAGE_NAME_CANDIDATE}
+      - save_cache:
+          paths:
+            - ~/kubernetese-monitor/snyk-operator
+          key: operator
+      - persist_to_workspace:
+          root: .
+          paths:
+            - snyk-operator/
+      - run:
+          name: Notify Slack on failure
+          command: |
+            if [[ "$CIRCLE_BRANCH" == "staging" ]]; then
+              ./scripts/slack-notify-failure.sh "staging-build-operator-${CIRCLE_SHA1}"
+            else
+              echo "Current branch is $CIRCLE_BRANCH so skipping notifying Slack"
+            fi
+          when: on_fail
+
+  openshift4_integration_tests:
+    <<: *default_machine_config
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - operator
+      - attach_workspace:
+          at: ~/kubernetes-monitor
+      - run:
+          name: Bla
+          command: |
+            true
+      - run:
+          name: Notify Slack on failure
+          command: |
+            if [[ "$CIRCLE_BRANCH" == "staging" ]]; then
+              ./scripts/slack-notify-failure.sh "staging-build-operator-${CIRCLE_SHA1}"
             else
               echo "Current branch is $CIRCLE_BRANCH so skipping notifying Slack"
             fi
@@ -311,27 +378,7 @@ workflows:
   version: 2
   PR_TO_STAGING:
     jobs:
-      - build_image:
-          <<: *main_branches_filter
-      - unit_tests:
-          <<: *main_branches_filter
-      - system_tests:
-          <<: *main_branches_filter
-      - integration_tests:
-          requires:
-            - build_image
-          <<: *main_branches_filter
-      - package_manager_test_apk:
-          requires:
-            - build_image
-          <<: *main_branches_filter
-      - package_manager_test_apt:
-          requires:
-            - build_image
-          <<: *main_branches_filter
-      - package_manager_test_rpm:
-          requires:
-            - build_image
+      - create_cluster:
           <<: *main_branches_filter
 
   MERGE_TO_STAGING:

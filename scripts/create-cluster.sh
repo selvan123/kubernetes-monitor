@@ -5,7 +5,7 @@ CRC_VERSION=1.5.0
 OC_VERSION=v3.11.0
 OC_COMMIT=0cbc58b
 
-apt install qemu-kvm \
+sudo apt install -y qemu-kvm \
   libvirt-daemon \
   libvirt-daemon-system \
   network-manager

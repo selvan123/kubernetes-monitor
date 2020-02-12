@@ -5,10 +5,8 @@ CRC_VERSION=1.5.0
 OC_VERSION=v3.11.0
 OC_COMMIT=0cbc58b
 
-sudo apt install -y qemu-kvm \
-  libvirt-daemon \
-  libvirt-daemon-system \
-  network-manager
+sudo apt update
+sudo apt install -y qemu qemu-kvm network-manager
 
 curl \
   https://mirror.openshift.com/pub/openshift-v4/clients/crc/${CRC_VERSION}/crc-linux-amd64.tar.xz \

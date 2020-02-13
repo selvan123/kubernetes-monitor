@@ -4,8 +4,7 @@ set -e
 OC_VERSION=v3.11.0
 OC_COMMIT=0cbc58b
 
-sudo echo '34.66.203.10 api.crc.testing oauth-openshift.apps-crc.testing' >> /etc/hosts
-echo "done !"
+echo '34.66.203.10 api.crc.testing oauth-openshift.apps-crc.testing' | | sudo tee -a /etc/hosts
 
 curl \
   -L \

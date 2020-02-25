@@ -151,6 +151,11 @@ jobs:
             export SNYK_MONITOR_IMAGE_TAG="${IMAGE_TAG}-${CIRCLE_SHA1}"
             export SNYK_OPERATOR_VERSION="0.0.0"
             ./scripts/package-operator.sh "${SNYK_OPERATOR_VERSION}" "${SNYK_MONITOR_IMAGE_TAG}"
+      - persist_to_workspace:
+          root: snyk-operator
+          paths:
+            - snyk-operator.package.yaml
+            - 0.0.0/
       - run:
           name: Notify Slack on failure
           command: |
@@ -264,6 +269,11 @@ jobs:
     <<: *default_machine_config
     steps:
       - checkout
+      - attach_workspace:
+          at: snyk-operator
+      - run:
+          name: TEST
+          command: cat snyk-operator/snyk-operator.package.yaml
       - run:
           name: APPEND AN ENTRY TO THE TEST ENVIRONMENT TO /ETC/HOSTS
           command: |
@@ -433,6 +443,7 @@ workflows:
       - openshift4_integration_tests:
           requires:
             - build_image
+            - build_operator
           <<: *staging_branch_only_filter
       - package_manager_test_apk:
           requires:
